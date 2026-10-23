@@ -1,0 +1,21 @@
+{
+  "replicas": 4,
+  "policy": "locality",
+  "max_batch_wait": 30,
+  "slo": 900.0,
+  "starvation_threshold": 60,
+  "tenant_ticket_cap": 32,
+  "tenant_byte_cap": 33554432,
+  "controller_margin": 1.5,
+  "response_margin": 1.5,
+  "demand_eviction": true,
+  "prefetch": false,
+  "replication": false,
+  "max_retries": 1,
+  "weights": null,
+  "admission_guard": true,
+  "record_events": false,
+  "prefetch_ttl": 30.0,
+  "service_gap_guard": true,
+  "eligibility": "ready"
+}

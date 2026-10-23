@@ -1,0 +1,162 @@
+{
+  "adapter_max_wait": {
+    "one/a@v1": 2.0160981453286744
+  },
+  "arrival_lateness": {
+    "max": 0.0036571670789271593,
+    "p50": 0.001935125095769763,
+    "p99": 0.003544208128005266
+  },
+  "backend": "original",
+  "batch_fill": {
+    "batches": 1,
+    "mean": 128,
+    "p50": 128,
+    "p99": 128
+  },
+  "cohort": "protected_offered",
+  "command": "/opt/homebrew/opt/python@3.12/bin/python3.12 run.py bench --config results/calibration/speed1-cold.json --trace results/traces/speed1-cold.jsonl.gz --output results/calibration/speed1-cold.json --backend original --speed 1",
+  "config": {
+    "admission_guard": true,
+    "controller_margin": 0.25,
+    "demand_eviction": true,
+    "max_batch_wait": 0,
+    "max_retries": 1,
+    "opportunistic": false,
+    "policy": "fair",
+    "prefetch": false,
+    "prefetch_ttl": 30.0,
+    "record_events": true,
+    "replicas": 4,
+    "replication": false,
+    "response_margin": 0.25,
+    "score": "backlog",
+    "service_gap_guard": true,
+    "slo": 900.0,
+    "slru": true,
+    "starvation_threshold": 60.0,
+    "tenant_byte_cap": 33554432,
+    "tenant_ticket_cap": 32,
+    "weights": null
+  },
+  "conservation": {
+    "accepted": 128,
+    "completed": 128,
+    "deadline_misses": 0,
+    "failed": 0,
+    "offered": 128,
+    "outstanding": 0,
+    "rejected": 0
+  },
+  "customers": {
+    "one": {
+      "accepted": 128,
+      "completed": 128,
+      "max_backlogged_service_gap": 2.0160981453286744,
+      "max_wait": 2.0160981453286744,
+      "offered": 128,
+      "p99_wait": 2.0160981453286744,
+      "rejected": 0,
+      "rejection_rate": 0.0
+    }
+  },
+  "customers_without_acceptance": [],
+  "engine_audit": {
+    "cold_loads": 1,
+    "completed": 128,
+    "compute_idle_seconds": 11.865116013518572,
+    "compute_seconds": 1.2604049869561202,
+    "exposed_load_seconds": 2.0103001449247633,
+    "load_seconds": 2.0103001449247633,
+    "overlapped_load_seconds": 0.0,
+    "overlapped_loads": 0,
+    "warm_loads": 0
+  },
+  "invocation": "scripts/calibrate.py",
+  "max_backlogged_service_gap": 2.0160981453286744,
+  "max_wait": 2.0160981453286744,
+  "outstanding_at_load_end": 128,
+  "process_cpu_seconds": 0.08217799999999897,
+  "rejection_rate": 0.0,
+  "rejection_reasons": {},
+  "replay_source": null,
+  "scheduler_cpu_seconds": 0.038305999999927565,
+  "scheduler_metrics": {
+    "accepted": 128,
+    "batches": 1,
+    "blocked_idle_seconds": 0.003002916229888797,
+    "cache_hits": 0,
+    "coalescing_idle_seconds": 0.0,
+    "deadline_violations": 0,
+    "edf_overrides": 0,
+    "evictions": 0,
+    "exposed_load_seconds": 2.0117191248573363,
+    "failed": 0,
+    "idle_seconds": 9.804544497048482,
+    "loads": 1,
+    "max_service_gap": 0.0035849169362336397,
+    "prefetches": 0,
+    "queued_idle_seconds": 0.003002916229888797,
+    "rejected": 0,
+    "replications": 0,
+    "retries": 0,
+    "stale_completions": 0
+  },
+  "schema": 1,
+  "seed": 17,
+  "source_hash": "87afd080eaa2bb70e439453d3864afbf8e2c4fb97d036a0c12616cb9eb1054bb",
+  "speed": 1,
+  "trace": "results/traces/speed1-cold.jsonl.gz",
+  "trace_hash": "100238b22ba5ba8de97fe7eaed4dae1b304022f5ab54b3eee426d57d7f252edf",
+  "wall_seconds": 3.281984749948606,
+  "windows": {
+    "burst": {
+      "begin": 1,
+      "completed": 0,
+      "completed_goodput": 0.0,
+      "compute_idle_seconds": 4,
+      "compute_seconds": 0,
+      "deadline_goodput": 0.0,
+      "end": 2,
+      "exposed_load_seconds": 1.0,
+      "load_seconds": 1,
+      "overlapped_load_seconds": 0.0
+    },
+    "drain": {
+      "begin": 3,
+      "completed": 128,
+      "completed_goodput": 457.8659042905891,
+      "compute_idle_seconds": 0.8417281996447699,
+      "compute_seconds": 0.2765031322847946,
+      "deadline_goodput": 457.8659042905891,
+      "end": 3.279557832982391,
+      "exposed_load_seconds": 0.0,
+      "load_seconds": 0,
+      "overlapped_load_seconds": 0.0
+    },
+    "recovery": {
+      "begin": 2,
+      "completed": 0,
+      "completed_goodput": 0.0,
+      "compute_idle_seconds": 3.0160981453286744,
+      "compute_seconds": 0.9839018546713256,
+      "deadline_goodput": 0.0,
+      "end": 3,
+      "exposed_load_seconds": 0.014720008267523621,
+      "load_seconds": 0.014720008267523621,
+      "overlapped_load_seconds": 0.0
+    },
+    "steady": {
+      "begin": 0,
+      "completed": 0,
+      "completed_goodput": 0.0,
+      "compute_idle_seconds": 4,
+      "compute_seconds": 0,
+      "deadline_goodput": 0.0,
+      "end": 1,
+      "exposed_load_seconds": 0.9955801366572395,
+      "load_seconds": 0.9955801366572395,
+      "overlapped_load_seconds": 0.0
+    }
+  }
+}
