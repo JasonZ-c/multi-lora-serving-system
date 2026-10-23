@@ -2,7 +2,7 @@
 
 Current policy: **ready-gate eligibility, a 30s batching window, customer virtual service plus a 60s service-gap trigger, joint placement and demand-aware LRU**. Prefetch and selective replication are off. A customer joins fairness with a full or aged ticket. A small young ticket does not make that customer ready.
 
-**The chosen comparison is [results/final-eligibility.json](../results/final-eligibility.json).** The ready gate (`results/final-virtual/`, §7) completes more requests and keeps a shorter maximum wait for the smallest customer than the pending rule (`results/eligible-virtual/`, §13), which treats a small ticket as a ready customer. Original-engine runs, identical-cohort replays, and the batch-window screens were not repeated. The core has one backlog/load pair score. The second-hit cache preference and alternative dispatch scores were removed after screening.
+**The chosen comparison is the ready gate.** The ready gate (§7) completes more requests and keeps a shorter maximum wait for the smallest customer than the pending rule (§13), which treats a small ticket as a ready customer. Original-engine runs, identical-cohort replays, and the batch-window screens were not repeated. The core has one backlog/load pair score. The second-hit cache preference and alternative dispatch scores were removed after screening.
 
 The 30s window is a conservative default. Earlier 30s/60s comparisons also changed the service-gap threshold, so they do not isolate batching under the latest fixed-60s policy; they remain historical evidence, not proof of an optimum. It is not a weighted aggregate score. All figures below are one seed-17 run per configuration/trace unless explicitly marked as historical calibration or correctness validation. The 2%/1% interpretation guidelines were not treated as gates.
 
@@ -28,13 +28,13 @@ Hypothesis: a bounded coalescing window improves fill and admission, at a measur
 
 | Screen configuration | Completed after drain | Rejection | Max backlogged gap (s) |
 | --- | --- | --- | --- |
-| [fifo 0s](../results/screen/fifo-w0-p80.json) | 4,685 / 2,451 | 94.32% / 97.03% | 369.4 / 386.0 |
-| [fifo 30s](../results/screen/fifo-w30-p80.json) | 4,920 / 2,790 | 94.04% / 96.62% | 465.5 / 465.2 |
-| [fifo 60s](../results/screen/fifo-w60-p80.json) | 4,950 / 2,459 | 94.00% / 97.02% | 508.3 / 527.1 |
-| [fair 0s](../results/screen/fair-w0-p80.json) | 39,873 / 40,323 | 51.67% / 51.12% | 43.2 / 41.5 |
-| [fair 30s](../results/screen/fair-w30-p80.json) | 43,592 / 41,949 | 47.16% / 49.15% | 64.0 / 63.6 |
-| [fair 60s](../results/screen/fair-w60-p80.json) | 47,132 / 44,190 | 42.87% / 46.44% | 94.5 / 93.0 |
-| [fair 120s](../results/screen/fair-w120-p80.json) | 53,272 / 48,560 | 35.43% / 41.14% | 150.8 / 152.7 |
+| fifo 0s | 4,685 / 2,451 | 94.32% / 97.03% | 369.4 / 386.0 |
+| fifo 30s | 4,920 / 2,790 | 94.04% / 96.62% | 465.5 / 465.2 |
+| fifo 60s | 4,950 / 2,459 | 94.00% / 97.02% | 508.3 / 527.1 |
+| fair 0s | 39,873 / 40,323 | 51.67% / 51.12% | 43.2 / 41.5 |
+| fair 30s | 43,592 / 41,949 | 47.16% / 49.15% | 64.0 / 63.6 |
+| fair 60s | 47,132 / 44,190 | 42.87% / 46.44% | 94.5 / 93.0 |
+| fair 120s | 53,272 / 48,560 | 35.43% / 41.14% | 150.8 / 152.7 |
 
 Decision: regrouping within customer queues is essential versus contiguous FIFO tickets. The representative window set is 0 / 30 / 60 / 120 seconds. The initial 0/30/60 results were already available when the plan was simplified; the 120s Fair screen completes the four representative values, retaining prior results as history. Promote only informative candidates; 30s and 60s were taken to full validation. Their short-trace acceptance advantage cannot establish the final fairness choice. A batching timeout makes a partial ticket eligible; it does not promise it starts at that time.
 
@@ -44,15 +44,15 @@ Hypotheses: cache-aware placement can improve locality, demand-aware victims avo
 
 | Screen (60s window) | Completed after drain | Max gap (s) | Smallest customer max wait (s) |
 | --- | --- | --- | --- |
-| [joint](../results/screen/joint-p80.json) | 46,248 / 44,441 | 94.2 / 94.4 | 117.0 / 110.2 |
-| [demand](../results/screen/demand-p80.json) | 46,248 / 44,441 | 92.2 / 94.4 | 117.0 / 110.2 |
-| [slru](../results/screen/slru-p80.json) | 46,248 / 44,441 | 92.2 / 94.4 | 117.0 / 110.2 |
-| [prefetch](../results/screen/prefetch-p80.json) | 47,004 / 45,281 | 92.7 / 115.6 | 93.7 / 115.6 |
-| [replication](../results/screen/replication-p80.json) | 48,796 / 45,772 | 94.1 / 105.6 | 110.7 / 100.2 |
-| [marginal](../results/screen/marginal-p80.json) | 48,833 / 45,772 | 94.1 / 105.6 | 110.7 / 100.2 |
-| [opportunistic](../results/screen/opportunistic-p80.json) | 48,155 / 45,043 | 94.0 / 92.4 | 88.7 / 100.9 |
+| joint | 46,248 / 44,441 | 94.2 / 94.4 | 117.0 / 110.2 |
+| demand | 46,248 / 44,441 | 92.2 / 94.4 | 117.0 / 110.2 |
+| slru | 46,248 / 44,441 | 92.2 / 94.4 | 117.0 / 110.2 |
+| prefetch | 47,004 / 45,281 | 92.7 / 115.6 | 93.7 / 115.6 |
+| replication | 48,796 / 45,772 | 94.1 / 105.6 | 110.7 / 100.2 |
+| marginal | 48,833 / 45,772 | 94.1 / 105.6 | 110.7 / 100.2 |
+| opportunistic | 48,155 / 45,043 | 94.0 / 92.4 | 88.7 / 100.9 |
 
-The second-hit preference produced exactly the same headline outcomes as demand-aware LRU in both screens. Marginal dispatch added only 37 completions in pattern 1 and none in pattern 2. Remove both branches and their Config fields; retain archived code/cards for reproduction. Do not promote a victim-reload dispatch penalty without evidence of residual disruption. Opportunistic partial dispatch did not improve acceptance consistently. An earlier [virtual-only experiment](../results/screen/virtual-only-p80.json), from an earlier eligibility rule, remains historical evidence. It is not part of the current experiment plan: default Fair always combines virtual service and the customer service-gap guard, with no ON/OFF ablation.
+The second-hit preference produced exactly the same headline outcomes as demand-aware LRU in both screens. Marginal dispatch added only 37 completions in pattern 1 and none in pattern 2. Remove both branches and their Config fields; retain archived code/cards for reproduction. Do not promote a victim-reload dispatch penalty without evidence of residual disruption. Opportunistic partial dispatch did not improve acceptance consistently. An earlier virtual-only experiment, from an earlier eligibility rule, remains historical evidence. It is not part of the current experiment plan: default Fair always combines virtual service and the customer service-gap guard, with no ON/OFF ablation.
 
 ## 4. Full locality ablations
 
@@ -60,10 +60,10 @@ Hypothesis: short-trace wins survive 600s sustained bursts. Run the promising me
 
 | Full mechanism stack | Completed | Max gap (s) | Scheduler CPU (s) | Warm reloads |
 | --- | --- | --- | --- | --- |
-| [joint](../results/full-locality/joint-p80.json) | 194,029 / 189,335 | 94.4 / 94.6 | 11.1 / 11.1 | 2312 / 2319 |
-| [demand](../results/full-locality/demand-p80.json) | 201,743 / 195,249 | 94.4 / 94.6 | 15.5 / 19.7 | 1150 / 1280 |
-| [prefetch](../results/full-locality/prefetch-p80.json) | 205,165 / 201,600 | 94.5 / 118.4 | 64.0 / 47.0 | 1179 / 1323 |
-| [replication](../results/full-locality/replication-p80.json) | 207,890 / 203,007 | 93.0 / 113.4 | 87.7 / 76.2 | 1280 / 1409 |
+| joint | 194,029 / 189,335 | 94.4 / 94.6 | 11.1 / 11.1 | 2312 / 2319 |
+| demand | 201,743 / 195,249 | 94.4 / 94.6 | 15.5 / 19.7 | 1150 / 1280 |
+| prefetch | 205,165 / 201,600 | 94.5 / 118.4 | 64.0 / 47.0 | 1179 / 1323 |
+| replication | 207,890 / 203,007 | 93.0 / 113.4 | 87.7 / 76.2 | 1280 / 1409 |
 
 Decision: demand-aware LRU improves accepted/completed counts in both patterns and substantially reduces warm reloads. Keep it. Prefetch and replication add acceptance, but their extra actor work and service-gap cost are consequential: the prefetch stack reaches a 118.4s gap in pattern 2; replication remains above 113s there. They stay off in the final configuration. Their options remain available to reproduce workload-dependent tradeoffs and exercise safe overlap/migration; they are not claimed as universally beneficial defaults. Residual reloads can be consequential, but the simpler demand-aware victim policy already addresses them; no unmeasured penalty is silently enabled.
 
@@ -73,10 +73,10 @@ Hypothesis: the 60s screen winner may be a poor fairness trade on full traffic. 
 
 | Full configuration | Completed | Max gap (s) | Smallest customer max wait (s) |
 | --- | --- | --- | --- |
-| [Fair 30s](../results/full-tuning/fair-w30-p80.json) | 187,847 / 181,333 | 63.1 / 63.6 | 92.4 / 89.0 |
-| [Fair 60s](../results/full-tuning/fair-w60-p80.json) | 194,066 / 187,764 | 93.7 / 93.5 | 119.2 / 91.2 |
-| [Joint + demand LRU 30s](../results/full-tuning/demand-w30-p80.json) | 193,017 / 185,480 | 64.4 / 64.8 | 71.8 / 87.2 |
-| [Joint + demand LRU 60s](../results/full-locality/demand-p80.json) | 201,743 / 195,249 | 94.4 / 94.6 | 100.3 / 95.3 |
+| Fair 30s | 187,847 / 181,333 | 63.1 / 63.6 | 92.4 / 89.0 |
+| Fair 60s | 194,066 / 187,764 | 93.7 / 93.5 | 119.2 / 91.2 |
+| Joint + demand LRU 30s | 193,017 / 185,480 | 64.4 / 64.8 | 71.8 / 87.2 |
+| Joint + demand LRU 60s | 201,743 / 195,249 | 94.4 / 94.6 | 100.3 / 95.3 |
 
 Historical decision: choose **30s**. For the locality policy this reduces maximum gaps from 94.4/94.6s to 64.4/64.8s, while giving up about 4.3%/5.0% of accepted completions relative to 60s. That was the initial keep rationale. Because the threshold also changed from 60s to 90s, this is not a controlled estimate of window effects under the current fixed-60s guard. The smallest customer's requests remain fully accepted. The added 120s screen accepts more work but increases maximum gaps to about 151–153s; it reinforces the batching tradeoff without justifying another full sweep. Keep the representative 0/30/60/120 set; no intermediate or longer search is planned.
 
@@ -94,7 +94,7 @@ Hypothesis: greater acceleration distorts arrivals and controller timing. Use th
 
 Initial decision: use **speed 10**, subsequently superseded by full-backlog evidence below. Speed 40 has about ten logical seconds of arrival delay and changes acceptance; it is not a faithful default. The speed-1 cold/full-batch check completes 128 requests in about 3.28 wall seconds, matching the 2.0 + 1.25s engine path plus controller overhead.
 
-The initial single-customer, full-base-batch scheduler saturation check achieved **366.94 fleet requests/s** over engine batch-start to final batch-end span, compared with the ideal 409.6. It includes scheduler/thread/wakeup/result overhead. The design's historical three engine-only trials had median **395.04 requests/s**; those are historical, differently scoped measurements, not repetitions of this serving benchmark or claimed current workload goodput. At the corrected final speed-5 / 1.5s-margin profile, the same saved full-base-batch trace achieved **393.14 fleet requests/s**, all 32,768 completed with zero timing-bound violations (`results/calibration/base-saturation-final.json`). This new configuration is one run, not another sample of the initial configuration. Final workload rates and original/virtual results are kept separate below.
+The initial single-customer, full-base-batch scheduler saturation check achieved **366.94 fleet requests/s** over engine batch-start to final batch-end span, compared with the ideal 409.6. It includes scheduler/thread/wakeup/result overhead. The design's historical three engine-only trials had median **395.04 requests/s**; those are historical, differently scoped measurements, not repetitions of this serving benchmark or claimed current workload goodput. At the corrected final speed-5 / 1.5s-margin profile, the same saved full-base-batch trace achieved **393.14 fleet requests/s**, all 32,768 completed with zero timing-bound violations . This new configuration is one run, not another sample of the initial configuration. Final workload rates and original/virtual results are kept separate below.
 
 ## Original-engine validation interruption and correction
 
@@ -108,16 +108,16 @@ Measured pauses justify one calibration correction: **speed 5, controller margin
 
 ## 7. Final virtual validation
 
-These are the ready-gate results, and they are the default. The pending alternative is §13. The combined decision is §14 and `results/final-eligibility.json`. These are full protected offered-load traces with the common **30s window, 60s gap threshold, 1.5s controller and response margins**, one seed-17 run per configuration/trace. The previous .25s-margin evidence above remains historical. All six runs completed every accepted request with zero failures, misses, outstanding requests, engine-contract errors or timing-bound violations. Every customer received some accepted work.
+These are the ready-gate results, and they are the default. The pending alternative is §13. The combined decision is §14 and the eligibility comparison. These are full protected offered-load traces with the common **30s window, 60s gap threshold, 1.5s controller and response margins**, one seed-17 run per configuration/trace. The previous .25s-margin evidence above remains historical. All six runs completed every accepted request with zero failures, misses, outstanding requests, engine-contract errors or timing-bound violations. Every customer received some accepted work.
 
 | Policy / pattern | Accepted = completed | Rejection | Burst / recovery deadline goodput (req/s) | Drain completions | Max gap (s) | Smallest customer accepted / max wait (s) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| [fifo / 80](../results/final-virtual/fifo-p80.json) | 14,884 | 98.09% | 7.38 / 12.47 | 2,780 | 420.53 | 8/166 / 422.40 |
-| [fifo / 50](../results/final-virtual/fifo-p50.json) | 9,560 | 98.77% | 4.73 / 7.82 | 1,882 | 435.52 | 7/166 / 435.52 |
-| [fair / 80](../results/final-virtual/fair-p80.json) | 186,225 | 76.12% | 126.31 / 109.36 | 37,925 | 64.48 | 166/166 / 71.52 |
-| [fair / 50](../results/final-virtual/fair-p50.json) | 180,121 | 76.91% | 123.31 / 103.71 | 37,995 | 63.48 | 166/166 / 80.39 |
-| [locality / 80](../results/final-virtual/locality-p80.json) | 192,528 | 75.32% | 139.16 / 107.95 | 36,793 | 63.81 | 166/166 / 93.67 |
-| [locality / 50](../results/final-virtual/locality-p50.json) | 184,592 | 76.33% | 134.17 / 100.11 | 37,811 | 64.79 | 166/166 / 91.22 |
+| fifo / 80 | 14,884 | 98.09% | 7.38 / 12.47 | 2,780 | 420.53 | 8/166 / 422.40 |
+| fifo / 50 | 9,560 | 98.77% | 4.73 / 7.82 | 1,882 | 435.52 | 7/166 / 435.52 |
+| fair / 80 | 186,225 | 76.12% | 126.31 / 109.36 | 37,925 | 64.48 | 166/166 / 71.52 |
+| fair / 50 | 180,121 | 76.91% | 123.31 / 103.71 | 37,995 | 63.48 | 166/166 / 80.39 |
+| locality / 80 | 192,528 | 75.32% | 139.16 / 107.95 | 36,793 | 63.81 | 166/166 / 93.67 |
+| locality / 50 | 184,592 | 76.33% | 134.17 / 100.11 | 37,811 | 64.79 | 166/166 / 91.22 |
 
 Locality improves acceptance by 3.38% / 2.48% over Fair, with similar fleet maximum service gaps and 40.3% / 41.0% fewer warm reloads (1,232/1,233 versus 2,063/2,089). It costs roughly 1.5/3.9 extra scheduler CPU seconds per full trace. Its smallest customer still has all work accepted, but maximum request wait worsens from 71.52/80.39s to 93.67/91.22s; that cost is visible even though maximum customer gaps remain similar. Fair is the simpler fallback when this locality tradeoff is unattractive. Individual cold-request tails also regress: c10 in pattern 1 rises from 631.70s to 803.86s, and c18 in pattern 2 from 195.30s to 546.71s, with unchanged acceptance for those customers. Regular customer service does not imply short waits for every adapter. Locality is a tradeoff, not a dominance claim; original-engine outcomes remain the final check.
 
@@ -133,12 +133,12 @@ All six final runs completed **754,435 accepted requests in total**, with zero f
 
 | Original policy / pattern | Accepted = completed | Rejection | Burst / recovery deadline goodput (req/s) | Drain completions | Max gap (s) | Smallest accepted / max wait (s) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| [fifo / 80](../results/final-original/fifo-p80.json) | 15,341 | 98.03% | 7.46 / 13.21 | 2,751 | 437.80 | 9/166 / 635.33 |
-| [fifo / 50](../results/final-original/fifo-p50.json) | 7,716 | 99.01% | 1.60 / 7.61 | 2,046 | 579.83 | 4/166 / 585.04 |
-| [fair / 80](../results/final-original/fair-p80.json) | 181,419 | 76.74% | 118.59 / 107.03 | 39,577 | 65.20 | 166/166 / 60.33 |
-| [fair / 50](../results/final-original/fair-p50.json) | 177,705 | 77.22% | 124.08 / 98.87 | 38,464 | 64.33 | 166/166 / 70.22 |
-| [locality / 80](../results/final-original/locality-p80.json) | 191,461 | 75.45% | 140.85 / 104.26 | 37,432 | 64.98 | 166/166 / 57.30 |
-| [locality / 50](../results/final-original/locality-p50.json) | 180,793 | 76.82% | 125.13 / 103.14 | 38,047 | 63.24 | 166/166 / 84.55 |
+| fifo / 80 | 15,341 | 98.03% | 7.46 / 13.21 | 2,751 | 437.80 | 9/166 / 635.33 |
+| fifo / 50 | 7,716 | 99.01% | 1.60 / 7.61 | 2,046 | 579.83 | 4/166 / 585.04 |
+| fair / 80 | 181,419 | 76.74% | 118.59 / 107.03 | 39,577 | 65.20 | 166/166 / 60.33 |
+| fair / 50 | 177,705 | 77.22% | 124.08 / 98.87 | 38,464 | 64.33 | 166/166 / 70.22 |
+| locality / 80 | 191,461 | 75.45% | 140.85 / 104.26 | 37,432 | 64.98 | 166/166 / 57.30 |
+| locality / 50 | 180,793 | 76.82% | 125.13 / 103.14 | 38,047 | 63.24 | 166/166 / 84.55 |
 
 | Original policy / pattern | Arrival lateness p99 / max (logical s) | Timing-bound episodes | Max controller tick (logical s) | Scheduler CPU (s) |
 | --- | ---: | ---: | ---: | ---: |
@@ -159,10 +159,10 @@ Only changed short-screen configurations (0s, 60s, 120s batching) were run once 
 
 | Batch wait; guard always 60s | Accepted = completed (80% / 50%) | Rejection | Max service gap (s) |
 | --- | ---: | ---: | ---: |
-| [0s](../results/fixed-guard-screen/fair-w0-p80.json) | 39,608 / 40,211 | 51.99% / 51.26% | 61.00 / 61.00 |
-| [30s](../results/fixed-guard-screen/fair-w30-p80.json) | 43,592 / 41,949 | 47.16% / 49.15% | 64.04 / 63.65 |
-| [60s](../results/fixed-guard-screen/fair-w60-p80.json) | 47,388 / 44,359 | 42.56% / 46.23% | 87.37 / 85.82 |
-| [120s](../results/fixed-guard-screen/fair-w120-p80.json) | 53,272 / 48,560 | 35.43% / 41.14% | 143.12 / 143.15 |
+| 0s | 39,608 / 40,211 | 51.99% / 51.26% | 61.00 / 61.00 |
+| 30s | 43,592 / 41,949 | 47.16% / 49.15% | 64.04 / 63.65 |
+| 60s | 47,388 / 44,359 | 42.56% / 46.23% | 87.37 / 85.82 |
+| 120s | 53,272 / 48,560 | 35.43% / 41.14% | 143.12 / 143.15 |
 
 All changed screens have zero accepted failures, deadline misses or outstanding work. The four representative windows demonstrate the acceptance/wait tradeoff without a threshold sweep: 30s remains a conservative default, not an exhaustive optimum. Full-scale evidence validates the selected 30s/60s-guard policy; short screens do not establish sustained-burst or sparse-customer guarantees. No additional full window optimization is needed for the default policy.
 
@@ -172,12 +172,12 @@ These virtual execution comparisons force the same **14,884 / 9,560 FIFO-accepte
 
 | Replay policy / pattern | Completed | Burst / recovery deadline goodput (req/s) | Drain completions | Max service gap (s) | Max request wait (s) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| [fifo / 80](../results/replay/fifo-p80.json) | 14,884 | 7.22 / 12.07 | 3,127 | 453.46 | 506.79 |
-| [fifo / 50](../results/replay/fifo-p50.json) | 9,560 | 4.50 / 7.68 | 2,118 | 479.25 | 519.03 |
-| [fair / 80](../results/replay/fair-p80.json) | 14,884 | 17.11 / 5.64 | 270 | 67.11 | 207.08 |
-| [fair / 50](../results/replay/fair-p50.json) | 9,560 | 10.49 / 4.19 | 121 | 64.43 | 241.86 |
-| [locality / 80](../results/replay/locality-p80.json) | 14,884 | 17.06 / 5.63 | 267 | 67.11 | 219.48 |
-| [locality / 50](../results/replay/locality-p50.json) | 9,560 | 10.30 / 4.19 | 121 | 64.43 | 245.12 |
+| fifo / 80 | 14,884 | 7.22 / 12.07 | 3,127 | 453.46 | 506.79 |
+| fifo / 50 | 9,560 | 4.50 / 7.68 | 2,118 | 479.25 | 519.03 |
+| fair / 80 | 14,884 | 17.11 / 5.64 | 270 | 67.11 | 207.08 |
+| fair / 50 | 9,560 | 10.49 / 4.19 | 121 | 64.43 | 241.86 |
+| locality / 80 | 14,884 | 17.06 / 5.63 | 267 | 67.11 | 219.48 |
+| locality / 50 | 9,560 | 10.30 / 4.19 | 121 | 64.43 | 245.12 |
 
 Fair and Locality regroup this cohort and finish more during the burst, leaving much less drain work and shorter customer gaps than FIFO. Their outcomes are very similar on this selected sparse cohort; this is not evidence for a universal locality win. No replay admission advantage is claimed.
 
@@ -203,12 +203,12 @@ Every accepted request completed, with zero failures, deadline misses, outstandi
 
 | Policy / pattern | Accepted = completed | Rejection | Burst / recovery deadline goodput (req/s) | Drain completions | Max gap (s) | Smallest customer accepted / max wait (s) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| [fifo / 80](../results/eligible-virtual/fifo-p80.json) | 14,868 | 98.09% | 6.99 / 12.93 | 2,678 | 366.49 | 9/166 / 448.55 |
-| [fifo / 50](../results/eligible-virtual/fifo-p50.json) | 9,862 | 98.74% | 4.70 / 8.09 | 1,999 | 420.70 | 6/166 / 421.13 |
-| [fair / 80](../results/eligible-virtual/fair-p80.json) | 183,559 | 76.47% | 128.29 / 109.29 | 38,652 | 62.99 | 166/166 / 94.43 |
-| [fair / 50](../results/eligible-virtual/fair-p50.json) | 178,272 | 77.14% | 120.87 / 106.96 | 38,215 | 61.74 | 166/166 / 124.48 |
-| [locality / 80](../results/eligible-virtual/locality-p80.json) | 191,413 | 75.46% | 141.75 / 109.68 | 36,582 | 61.74 | 166/166 / 104.05 |
-| [locality / 50](../results/eligible-virtual/locality-p50.json) | 183,341 | 76.49% | 134.59 / 100.39 | 38,770 | 61.96 | 166/166 / 94.14 |
+| fifo / 80 | 14,868 | 98.09% | 6.99 / 12.93 | 2,678 | 366.49 | 9/166 / 448.55 |
+| fifo / 50 | 9,862 | 98.74% | 4.70 / 8.09 | 1,999 | 420.70 | 6/166 / 421.13 |
+| fair / 80 | 183,559 | 76.47% | 128.29 / 109.29 | 38,652 | 62.99 | 166/166 / 94.43 |
+| fair / 50 | 178,272 | 77.14% | 120.87 / 106.96 | 38,215 | 61.74 | 166/166 / 124.48 |
+| locality / 80 | 191,413 | 75.46% | 141.75 / 109.68 | 36,582 | 61.74 | 166/166 / 104.05 |
+| locality / 50 | 183,341 | 76.49% | 134.59 / 100.39 | 38,770 | 61.96 | 166/166 / 94.14 |
 
 Against the ready-gate §7 cards, Fair accepts 1.43% / 1.03% fewer requests. Mean batch size moves from 54.80/54.12 to 53.36/52.68, and the median from 27/26 to 25/24. Fleet maximum service gaps stay next to the 60s trigger. The smallest customer still has all 166 requests accepted; its maximum request wait rises from 71.52/80.39s to 94.43/124.48s.
 
@@ -220,4 +220,4 @@ Retain joint placement and demand-aware LRU for the acceptance and warm-reload g
 
 ## 14. Eligibility decision
 
-Both arms are combined in [results/final-eligibility.json](../results/final-eligibility.json). The default is the **ready** gate from §7. Marking a small young ticket as a ready customer, the §13 pending rule, accepts 1.43% / 1.03% fewer Fair requests and moves the smallest customer's maximum wait from 71.52/80.39s to 94.43/124.48s. Locality shows the same direction: fewer completions and a longer pattern-1 small-customer wait. The pending rule removes about 38 replica-seconds of coalescing idle on Fair/80%, which does not repay the lost throughput. `Config.eligibility` defaults to `ready`; `pending` remains selectable.
+The default is the **ready** gate from §7. Marking a small young ticket as a ready customer, the §13 pending rule, accepts 1.43% / 1.03% fewer Fair requests and moves the smallest customer's maximum wait from 71.52/80.39s to 94.43/124.48s. Locality shows the same direction: fewer completions and a longer pattern-1 small-customer wait. The pending rule removes about 38 replica-seconds of coalescing idle on Fair/80%, which does not repay the lost throughput. `Config.eligibility` defaults to `ready`; `pending` remains selectable.

@@ -1,7 +1,7 @@
 """Two focused engine checks; no acceleration or threshold sweep.
 
 Execute from the repository root: python3.12 scripts/calibrate.py
-Historical 10/20/40 measurements remain in results/calibration with source ZIPs.
+Writes calibration cards under results/calibration.
 """
 import gzip
 import json

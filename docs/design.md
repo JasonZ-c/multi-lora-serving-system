@@ -1,4 +1,4 @@
-# Multi LoRA Inference System Design
+# Multi-LoRA Serving System Design
 
 **Status:** Serving stack with authenticated SQLite-backed APIs and one scheduler, used by both a deterministic virtual backend and threaded replica engines. Measured defaults and limits are in the [README](../README.md) and the [measurement report](iteration-report.md).
 **Primary target:** Long-tail LoRA serving. Priority tiers and automated customer CI/CD are design-only extensions; registration and manual release/rollback are implemented.
@@ -78,7 +78,7 @@ apply the deadline safety guard before committing
 
 While queued work remains, `service_gap = now - max(backlog_started_at, last_foreground_grant_at)`. A grant starts an actual committed load/compute sequence; prefetch, acceptance, and merely choosing a candidate do not reset the gap. After a grant, that customer competes normally again, regardless of how many adapters remain old. Temporarily blocked customers retain their gap while other workers serve legal work.
 
-Default eligibility is **`ready`**. A small young ticket does not make its customer ready; the customer joins virtual service and the 60s guard only with a full (128) or `MAX_BATCH_WAIT`-aged ticket and a legal available worker or permitted safe move. The full-trace comparison in `results/final-eligibility.json` shows this gate completes more requests and gives the smallest customer a shorter maximum wait than `pending`, which marks that small ticket as a ready customer. `pending` remains implemented: after the customer is chosen, a full or aged ticket is still preferred, and a young partial runs only when the customer has no ready ticket. A physically blocked customer cannot prevent another customer's legal grant. Any optional move must preserve source and destination deadline commitments before it creates an eligible pair.
+Default eligibility is **`ready`**. A small young ticket does not make its customer ready; the customer joins virtual service and the 60s guard only with a full (128) or `MAX_BATCH_WAIT`-aged ticket and a legal available worker or permitted safe move. The full-trace comparison shows this gate completes more requests and gives the smallest customer a shorter maximum wait than `pending`, which marks that small ticket as a ready customer. `pending` remains implemented: after the customer is chosen, a full or aged ticket is still preferred, and a young partial runs only when the customer has no ready ticket. A physically blocked customer cannot prevent another customer's legal grant. Any optional move must preserve source and destination deadline commitments before it creates an eligible pair.
 
 Reserve estimated virtual cost at grant time, then reconcile to actual `(batch_seconds + exposed_blocking_load_seconds) / customer_weight`; this prevents four simultaneous workers from spending the same uncharged fairness credit. Default weights are equal. Base traffic uses per-customer tickets, so each batch has one service account. A truly empty customer rejoins at the active virtual minimum. One customer may borrow the entire idle fleet; a configurable queued-byte cap and initial 32 unstarted tickets/customer bound memory, not its running share. Report tenant-limit rejection separately.
 
@@ -103,7 +103,7 @@ For example, 0.75s remaining compute plus two other 1.45s reservations gives 3.6
 
 Break score ties by oldest ingress, exposed load, and stable IDs. Demand loading starts once a foreground grant commits the candidate; do not keep rescoring it away. Busy workers are placement/prefetch candidates; use other available workers rather than waiting solely for a preferred home. Migration atomically checks both ledgers. Cold loading is eventually needed somewhere for accepted cold work, but its timing, overlap, and replica choice still affect throughput.
 
-The production implementation retains this one backlog/load proxy. Screening compared marginal dispatch and a second-hit cache preference; the benefits were small or absent, so their branches and configuration fields were removed. Comparison cards remain under `results/`. A victim-reload dispatch penalty was not promoted: demand-aware eviction and overlap are simpler ways to address observed reload cost. History does not multiply admission reservations or per-request service cost.
+The production implementation retains this one backlog/load proxy. Screening compared marginal dispatch and a second-hit cache preference; the benefits were small or absent, so their branches and configuration fields were removed. A victim-reload dispatch penalty was not promoted: demand-aware eviction and overlap are simpler ways to address observed reload cost. History does not multiply admission reservations or per-request service cost.
 
 ### 3.3 Batching window
 
@@ -111,7 +111,7 @@ Full (128) or `MAX_BATCH_WAIT`-aged tickets are the default eligibility gate. Ne
 
 **Staged selection:** screen batching windows **0, 30, 60, and 120 seconds**, as representative comparisons, with seed 17 and one run per configuration/trace. Do not exhaustively tune the window; expand beyond these four only when results reveal a meaningful reason. Use the 30s steady / 60s burst / 60s recovery traces only for screening. Promote promising windows to 120s / 600s / 600s traces, retaining the original 900s deadline, then drain accepted work. The final configuration and measured tradeoffs live in the iteration report.
 
-Wake on arrivals, engine completions, and batching timers. EDF slack still protects commitments when dispatch is legally blocked. A customer-gap timer cannot create a legal opportunity on a busy replica. `MAX_BATCH_WAIT` is neither a promised start time nor, under `pending`, a minimum delay. The combined full-trace result is `results/final-eligibility.json`; the ready gate is the default.
+Wake on arrivals, engine completions, and batching timers. EDF slack still protects commitments when dispatch is legally blocked. A customer-gap timer cannot create a legal opportunity on a busy replica. `MAX_BATCH_WAIT` is neither a promised start time nor, under `pending`, a minimum delay. The ready gate is the default.
 
 ## 4 Admission
 
@@ -234,7 +234,7 @@ Arrival rate above capacity alone does not prove a 900s deadline miss: an ideal 
 | --- | --- | --- |
 | Fairness unit | Customer virtual service plus service-gap guard; EDF protects each accepted request. | Test customer gaps/acceptance; per-LoRA priority buys additional adapter latency at a throughput/fairness cost. |
 | Admission | Per-replica EDF with runtime fallback. | Measure conservative rejection and guard frequency before considering global replay. |
-| Batching and score | Ready-gate eligibility by default; 30s batching window and the sole backlog/load proxy. `pending` remains selectable. | The ready gate beats marking a small ticket as a ready customer. Combined result: `results/final-eligibility.json`. |
+| Batching and score | Ready-gate eligibility by default; 30s batching window and the sole backlog/load proxy. `pending` remains selectable. | The ready gate beats marking a small ticket as a ready customer. |
 | Long tail | Joint placement and soft demand-aware LRU; prefetch/replication opt-in and off in the final configuration. | Prefetch/replication trade acceptance against CPU and customer gaps; physical distribution remains design-only. |
 | Priority | Strict Pro-first for the optional extension. | Weighted priority needs changed semantics; strict priority may reject Standard indefinitely. |
 | Release and faults | Manual versioned promotion/rollback; durable single outcomes within original deadlines. | Automate canaries only with sample/capacity evidence. N−1 headroom lowers the ideal ceiling to 307.2 requests/s and still cannot guarantee arbitrary failures. |
